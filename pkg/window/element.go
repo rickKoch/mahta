@@ -109,3 +109,10 @@ func (e element) draw(canvas []byte, ws winsize) error {
 
 	return nil
 }
+
+type padding struct {
+	top    int
+	bottom int
+	left   int
+	right  int
+}

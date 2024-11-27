@@ -16,10 +16,6 @@ const (
 	FgMagenta
 	FgCyan
 	FgWhite
-)
-
-// Foreground Hi-Intensity text colors
-const (
 	FgHiBlack ColorCode = iota + 90
 	FgHiRed
 	FgHiGreen
@@ -40,10 +36,7 @@ const (
 	BgMagenta
 	BgCyan
 	BgWhite
-)
 
-// Background Hi-Intensity text colors
-const (
 	BgHiBlack ColorCode = iota + 100
 	BgHiRed
 	BgHiGreen
