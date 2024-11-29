@@ -34,8 +34,11 @@ type element struct {
 	x int
 	// y point of a draw
 	y int
+	// padding
+	padding bool
 }
 
+// element draws itself
 func (e element) draw(canvas []byte, ws winsize) error {
 	lastXIdx := e.x + e.width  // last x index of the element
 	lastYIdx := e.y + e.height // last y index of the element
@@ -45,6 +48,7 @@ func (e element) draw(canvas []byte, ws winsize) error {
 		return errors.New("canvas not set")
 	}
 
+	// calculate the number of rows
 	rowsNum := len(canvas) / ws.rowSize
 
 	// Check if the element fits in the window
@@ -52,8 +56,40 @@ func (e element) draw(canvas []byte, ws winsize) error {
 		return errors.New("element does not fit in the window")
 	}
 
+	// value data
 	v := []byte(e.value)
+	valueIdx := 0
 	for y := e.y; y < lastYIdx; y++ {
+		// handle top and bottom padding
+		if (y == e.y || y == lastYIdx - 1) && e.padding  {
+			var colidx int = 0
+			for x := e.x; x < lastXIdx; x++ {
+				colidx = y*ws.rowSize + x*ws.colSize
+				// reset column
+				copy(canvas[colidx:colidx+ws.colSize], make([]byte, ws.colSize))
+
+				if x == e.x {
+					color := e.color.paint()
+					colorlen := len(color)
+
+					start := colidx
+					end := colidx + colorlen
+					copy(canvas[start:end], color[:])
+
+					canvas[end] = byte(space)
+				} else {
+					canvas[colidx] = byte(space)
+				}
+			}
+
+			// reset color
+			nocolor := []byte(noColor)
+			start := (colidx + ws.colSize) - len(nocolor)
+			end := start + len(nocolor)
+			copy(canvas[start:end], nocolor[:])
+			continue
+		}
+
 		// Check if the element fits in the `X` line
 		if lastXIdx*ws.colSize-1 > ws.rowSize {
 			return errors.New("element does not fit in the X line")
@@ -64,7 +100,15 @@ func (e element) draw(canvas []byte, ws winsize) error {
 			// Get the correct start of the column index.
 			// One char is a group of bytes
 			colidx = y*ws.rowSize + x*ws.colSize
-			valueIdx := ((y - e.y) * lastXIdx) + (x - e.x)
+
+			// handle the new line char `\n`
+			if len(v) > valueIdx && v[valueIdx] == newLine {
+				for i := x; i < lastXIdx; i++ {
+					colidx = y*ws.rowSize + i*ws.colSize
+					canvas[colidx] = byte(space)
+				}
+				break
+			}
 
 			// reset column
 			copy(canvas[colidx:colidx+ws.colSize], make([]byte, ws.colSize))
@@ -78,11 +122,12 @@ func (e element) draw(canvas []byte, ws winsize) error {
 				end := colidx + colorlen
 				copy(canvas[start:end], color[:])
 
-				// if no value set space
-				if len(v) <= valueIdx {
+				// if no value, or left padding set space
+				if len(v) <= valueIdx || e.padding {
 					canvas[end] = byte(space)
 				} else {
 					canvas[end] = v[valueIdx]
+					valueIdx++
 				}
 
 				continue
@@ -92,11 +137,21 @@ func (e element) draw(canvas []byte, ws winsize) error {
 			if len(v) <= valueIdx {
 				canvas[colidx] = byte(space)
 
+				valueIdx++
+				continue
+			}
+
+			// if last index and right padding set print space
+			if x == lastXIdx - 1 && e.padding {
+				canvas[colidx] = byte(space)
+
+				valueIdx++
 				continue
 			}
 
 			// set the value
 			canvas[colidx] = v[valueIdx]
+			valueIdx++
 		}
 
 		// reset color
@@ -105,14 +160,18 @@ func (e element) draw(canvas []byte, ws winsize) error {
 		end := start + len(nocolor)
 		copy(canvas[start:end], nocolor[:])
 
+		// prevent wrap to the next line until new line appears
+		if len(v) > valueIdx {
+			w := valueIdx + 1
+
+			for i, b := range v[valueIdx:] {
+				valueIdx = w + i
+				if b == newLine {
+					break
+				}
+			}
+		}
 	}
 
 	return nil
-}
-
-type padding struct {
-	top    int
-	bottom int
-	left   int
-	right  int
 }

@@ -13,6 +13,8 @@ import (
 const (
 	// ASCII space char = 32
 	space = 32
+	// ASCII new line char = 10
+	newLine = 10
 	// Default column size
 	defaultColumnSize = 15
 )
@@ -39,24 +41,28 @@ func New() (*window, error) {
 		elements: []element{
 			{
 				width:  6,
-				height: 8,
-				value:  []byte("pero, trpe, mite, risto"),
+				height: 5,
+				value:  []byte("pe\nro,trpe,\nmite,\nristo"),
 				color:  color{code: BgGreen},
+				// padding: true,
 			},
 			{
-				width:  1,
-				height: 1,
-				value:  []byte("m"),
-				x:      20,
-				color:  color{code: BgHiMagenta},
+				width:  10,
+				height: 8,
+				value:  []byte("@@@@@@@@\n@@@@@@@@@@@@@\n@@@@@@@@@@@@@@\n@@@@@@@@@@@@@"),
+				color:  color{code: BgBlue},
+				padding: true,
+				x: 3,
+				y: 2,
 			},
 			{
-				width:  6,
-				height: 1,
-				value:  []byte("trpe, testing"),
-				x:      3,
-				y:      4,
-				color:  color{code: FgBlue},
+				width:  10,
+				height: 8,
+				value:  []byte("@@@@@@@@\n@@@@@@@@@@@@@\n@@@@@@@@@@@@@@\n@@@@@@@@@@@@@"),
+				color:  color{code: BgRed},
+				padding: true,
+				x: 5,
+				y: 3,
 			},
 		},
 	}
